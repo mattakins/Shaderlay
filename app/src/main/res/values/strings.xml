@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Shaderlay</string>
+    <string name="settings_title">Settings</string>
+
+    <!-- Overlay Service -->
+    <string name="overlay_service_name">Shader Overlay</string>
+    <string name="overlay_service_description">Applies shaders to screen content</string>
+    <string name="overlay_notification_title">Shaderlay Active</string>
+    <string name="overlay_notification_text">Tap to configure overlay settings</string>
+
+    <!-- Settings -->
+    <string name="enable_overlay">Enable Overlay</string>
+    <string name="overlay_opacity">Opacity</string>
+    <string name="shader_selection">Shader</string>
+    <string name="performance_mode">Performance Mode</string>
+    <string name="fps_limit">FPS Limit</string>
+
+    <!-- Permissions -->
+    <string name="permission_overlay_title">Overlay Permission Required</string>
+    <string name="permission_overlay_message">Please grant permission to display over other apps</string>
+    <string name="permission_grant">Grant Permission</string>
+    <string name="permission_cancel">Cancel</string>
+
+    <!-- Performance modes -->
+    <string name="performance_mode_high">High Quality</string>
+    <string name="performance_mode_balanced">Balanced</string>
+    <string name="performance_mode_battery">Battery Saver</string>
+
+    <!-- Shader names -->
+    <string name="shader_none">None (Pass-through)</string>
+    <string name="shader_crt">CRT</string>
+    <string name="shader_scanlines">Scanlines</string>
+    <string name="shader_lcd">LCD Grid</string>
+
+    <!-- General -->
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="settings">Settings</string>
+    <string name="about">About</string>
+</resources>

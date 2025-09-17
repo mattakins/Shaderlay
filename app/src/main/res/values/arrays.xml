@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Shader options -->
+    <string-array name="shader_entries">
+        <item>@string/shader_none</item>
+        <item>@string/shader_crt</item>
+        <item>@string/shader_scanlines</item>
+        <item>@string/shader_lcd</item>
+    </string-array>
+
+    <string-array name="shader_values">
+        <item>none</item>
+        <item>crt</item>
+        <item>scanlines</item>
+        <item>lcd</item>
+    </string-array>
+
+    <!-- Performance mode options -->
+    <string-array name="performance_entries">
+        <item>@string/performance_mode_high</item>
+        <item>@string/performance_mode_balanced</item>
+        <item>@string/performance_mode_battery</item>
+    </string-array>
+
+    <string-array name="performance_values">
+        <item>high</item>
+        <item>balanced</item>
+        <item>battery</item>
+    </string-array>
+
+    <!-- FPS limit options -->
+    <string-array name="fps_entries">
+        <item>30 FPS</item>
+        <item>60 FPS</item>
+        <item>120 FPS</item>
+        <item>Unlimited</item>
+    </string-array>
+
+    <string-array name="fps_values">
+        <item>30</item>
+        <item>60</item>
+        <item>120</item>
+        <item>-1</item>
+    </string-array>
+</resources>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        android:key="overlay_settings"
+        android:title="Overlay Settings"
+        app:iconSpaceReserved="false">
+
+        <!-- Custom shader preference will be added programmatically -->
+
+        <SeekBarPreference
+            android:defaultValue="50"
+            android:key="overlay_opacity"
+            android:max="100"
+            android:title="@string/overlay_opacity"
+            app:iconSpaceReserved="false"
+            app:showSeekBarValue="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Performance"
+        app:iconSpaceReserved="false">
+
+        <ListPreference
+            android:defaultValue="balanced"
+            android:entries="@array/performance_entries"
+            android:entryValues="@array/performance_values"
+            android:key="performance_mode"
+            android:title="@string/performance_mode"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            android:defaultValue="60"
+            android:entries="@array/fps_entries"
+            android:entryValues="@array/fps_values"
+            android:key="fps_limit"
+            android:title="@string/fps_limit"
+            app:iconSpaceReserved="false"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="General"
+        app:iconSpaceReserved="false">
+
+        <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:key="auto_start"
+            android:summary="Start overlay when device boots"
+            android:title="Auto-start"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="Advanced"
+        app:iconSpaceReserved="false">
+
+        <Preference
+            android:key="clear_cache"
+            android:summary="Clear compiled shader cache"
+            android:title="Clear Cache"
+            app:iconSpaceReserved="false" />
+
+        <Preference
+            android:key="about"
+            android:summary="Version and license information"
+            android:title="@string/about"
+            app:iconSpaceReserved="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>
