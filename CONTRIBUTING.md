@@ -31,8 +31,8 @@ This project adheres to a code of conduct. By participating, you are expected to
 
 1. **Fork and clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/shaderlay.git
-   cd shaderlay
+   git clone https://github.com/mattakins/Shaderlay.git
+   cd Shaderlay
    ```
 
 2. **Open in Android Studio:**

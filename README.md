@@ -1,7 +1,7 @@
 # Shaderlay - Android Overlay App
 
-[![Android CI/CD](https://github.com/username/shaderlay/workflows/Android%20CI/CD/badge.svg)](https://github.com/username/shaderlay/actions)
-[![Release](https://img.shields.io/github/v/release/username/shaderlay)](https://github.com/username/shaderlay/releases)
+[![Android CI/CD](https://github.com/mattakins/Shaderlay/workflows/Android%20CI/CD/badge.svg)](https://github.com/mattakins/Shaderlay/actions)
+[![Release](https://img.shields.io/github/v/release/mattakins/Shaderlay)](https://github.com/mattakins/Shaderlay/releases)
 [![API Level](https://img.shields.io/badge/API-26%2B-brightgreen.svg)](https://android-arsenal.com/api?level=26)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
@@ -124,7 +124,7 @@ WindowManager.LayoutParams().apply {
 ## 🚀 Getting Started
 
 ### Download & Install
-1. **Download APK** from [Releases](https://github.com/username/shaderlay/releases)
+1. **Download APK** from [Releases](https://github.com/mattakins/Shaderlay/releases)
 2. **Enable unknown sources** in Android settings
 3. **Install the APK** and launch the app
 4. **Grant overlay permission** when prompted
@@ -132,8 +132,8 @@ WindowManager.LayoutParams().apply {
 
 ### Building from Source
 ```bash
-git clone https://github.com/username/shaderlay.git
-cd shaderlay
+git clone https://github.com/mattakins/Shaderlay.git
+cd Shaderlay
 ./gradlew assembleDebug
 ```
 
@@ -174,8 +174,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/username/shaderlay/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/username/shaderlay/discussions)
+- **Issues**: [GitHub Issues](https://github.com/mattakins/Shaderlay/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/mattakins/Shaderlay/discussions)
 
 ---
 

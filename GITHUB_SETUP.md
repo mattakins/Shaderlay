@@ -27,7 +27,7 @@ This guide will help you set up the Shaderlay project on GitHub with all the nec
 git init
 
 # Add remote origin
-git remote add origin https://github.com/yourusername/shaderlay.git
+git remote add origin https://github.com/mattakins/Shaderlay.git
 
 # Add all files
 git add .
