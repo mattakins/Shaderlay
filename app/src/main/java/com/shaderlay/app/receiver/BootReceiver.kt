@@ -45,8 +45,10 @@ class BootReceiver : BroadcastReceiver() {
                     context.startService(intent)
                 }
                 Log.d(TAG, "Overlay service started successfully")
-            } catch (e: Exception) {
-                Log.e(TAG, "Failed to start overlay service", e)
+            } catch (e: SecurityException) {
+                Log.e(TAG, "Permission denied to start overlay service", e)
+            } catch (e: IllegalStateException) {
+                Log.e(TAG, "Service in invalid state", e)
             }
         } else {
             Log.d(TAG, "Auto-start disabled, not starting overlay service")

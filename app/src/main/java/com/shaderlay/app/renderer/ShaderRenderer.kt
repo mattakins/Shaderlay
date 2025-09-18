@@ -279,3 +279,4 @@ class ShaderRenderer(private val context: Context) : GLSurfaceView.Renderer {
         }
     }
 }
+

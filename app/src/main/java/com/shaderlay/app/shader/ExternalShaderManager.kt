@@ -83,34 +83,7 @@ class ExternalShaderManager(private val context: Context) {
             val lines = content.lines()
 
             for (line in lines) {
-                val trimmed = line.trim()
-                if (trimmed.isEmpty() || trimmed.startsWith("#")) continue
-
-                val parts = trimmed.split("=", limit = 2)
-                if (parts.size != 2) continue
-
-                val key = parts[0].trim()
-                val value = parts[1].trim().removeSurrounding("\"")
-
-                when {
-                    key == "shaders" -> preset.shaderCount = value.toIntOrNull() ?: 0
-                    key.startsWith("shader") && !key.contains("_") -> {
-                        val index = key.removePrefix("shader").toIntOrNull() ?: continue
-                        preset.shaderPaths[index] = value
-                    }
-                    key.startsWith("filter_linear") -> {
-                        val index = key.removePrefix("filter_linear").toIntOrNull() ?: continue
-                        preset.filterLinear[index] = value.toBoolean()
-                    }
-                    key.startsWith("scale_type") -> {
-                        val index = key.removePrefix("scale_type").toIntOrNull() ?: continue
-                        preset.scaleTypes[index] = value
-                    }
-                    key.startsWith("scale") && !key.contains("_") -> {
-                        val index = key.removePrefix("scale").toIntOrNull() ?: continue
-                        preset.scales[index] = value.toFloatOrNull() ?: 1.0f
-                    }
-                }
+                parsePresetLine(line.trim(), preset)
             }
 
             preset
@@ -118,6 +91,48 @@ class ExternalShaderManager(private val context: Context) {
             Log.e(TAG, "Failed to parse preset", e)
             null
         }
+    }
+
+    private fun parsePresetLine(trimmed: String, preset: ParsedPreset) {
+        if (trimmed.isEmpty() || trimmed.startsWith("#")) return
+
+        val parts = trimmed.split("=", limit = 2)
+        if (parts.size != 2) return
+
+        val key = parts[0].trim()
+        val value = parts[1].trim().removeSurrounding("\"")
+
+        when {
+            key == "shaders" -> parseShaderCount(value, preset)
+            key.startsWith("shader") && !key.contains("_") -> parseShaderPath(key, value, preset)
+            key.startsWith("filter_linear") -> parseFilterLinear(key, value, preset)
+            key.startsWith("scale_type") -> parseScaleType(key, value, preset)
+            key.startsWith("scale") && !key.contains("_") -> parseScale(key, value, preset)
+        }
+    }
+
+    private fun parseShaderCount(value: String, preset: ParsedPreset) {
+        preset.shaderCount = value.toIntOrNull() ?: 0
+    }
+
+    private fun parseShaderPath(key: String, value: String, preset: ParsedPreset) {
+        val index = key.removePrefix("shader").toIntOrNull() ?: return
+        preset.shaderPaths[index] = value
+    }
+
+    private fun parseFilterLinear(key: String, value: String, preset: ParsedPreset) {
+        val index = key.removePrefix("filter_linear").toIntOrNull() ?: return
+        preset.filterLinear[index] = value.toBoolean()
+    }
+
+    private fun parseScaleType(key: String, value: String, preset: ParsedPreset) {
+        val index = key.removePrefix("scale_type").toIntOrNull() ?: return
+        preset.scaleTypes[index] = value
+    }
+
+    private fun parseScale(key: String, value: String, preset: ParsedPreset) {
+        val index = key.removePrefix("scale").toIntOrNull() ?: return
+        preset.scales[index] = value.toFloatOrNull() ?: 1.0f
     }
 
     data class ParsedPreset(
