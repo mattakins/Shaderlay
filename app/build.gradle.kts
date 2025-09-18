@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -42,8 +45,8 @@ android {
             // Enable signing for release builds
             val keystorePropertiesFile = rootProject.file("keystore.properties")
             if (keystorePropertiesFile.exists()) {
-                val keystoreProperties = java.util.Properties()
-                keystoreProperties.load(java.io.FileInputStream(keystorePropertiesFile))
+                val keystoreProperties = Properties()
+                keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
                 signingConfig = signingConfigs.create("release") {
                     keyAlias = keystoreProperties["keyAlias"] as String
