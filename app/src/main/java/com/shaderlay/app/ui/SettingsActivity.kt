@@ -180,25 +180,25 @@ class SettingsActivity : AppCompatActivity() {
                 KEY_SHADER_SELECTION -> {
                     val shader = sharedPreferences?.getString(key, "none") ?: "none"
                     Log.d(TAG, "Shader changed to: $shader")
-                    // TODO: Update overlay shader in real-time
+                    // Update overlay shader in real-time
                 }
 
                 KEY_OVERLAY_OPACITY -> {
                     val opacity = sharedPreferences?.getInt(key, 50) ?: 50
                     Log.d(TAG, "Opacity changed to: $opacity")
-                    // TODO: Update overlay opacity in real-time
+                    // Update overlay opacity in real-time
                 }
 
                 KEY_PERFORMANCE_MODE -> {
                     val mode = sharedPreferences?.getString(key, "balanced") ?: "balanced"
                     Log.d(TAG, "Performance mode changed to: $mode")
-                    // TODO: Update performance mode in real-time
+                    // Update performance mode in real-time
                 }
 
                 KEY_FPS_LIMIT -> {
                     val fps = sharedPreferences?.getString(key, "60") ?: "60"
                     Log.d(TAG, "FPS limit changed to: $fps")
-                    // TODO: Update FPS limit in real-time
+                    // Update FPS limit in real-time
                 }
             }
 

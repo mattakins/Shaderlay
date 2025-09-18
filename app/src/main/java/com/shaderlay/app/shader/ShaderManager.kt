@@ -3,7 +3,6 @@ package com.shaderlay.app.shader
 import android.content.Context
 import android.opengl.GLES20
 import android.util.Log
-import java.io.IOException
 
 class ShaderManager(private val context: Context) {
 
