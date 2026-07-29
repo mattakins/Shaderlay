@@ -20,14 +20,15 @@ class GLOverlaySurfaceView @JvmOverloads constructor(
     init {
         Log.d(TAG, "Initializing GLOverlaySurfaceView")
 
-        // Configure for transparency
-        setZOrderOnTop(true)
-        holder.setFormat(PixelFormat.RGBA_8888)
+        // Configure for overlay transparency - proper overlay rendering
+        setZOrderMediaOverlay(true)
+        setZOrderOnTop(false)
+        holder.setFormat(PixelFormat.TRANSLUCENT)
 
         // Set OpenGL ES version
         setEGLContextClientVersion(2)
 
-        // Configure EGL for transparency
+        // Configure EGL for transparency support (8-bit RGBA with alpha channel)
         setEGLConfigChooser(8, 8, 8, 8, 16, 0)
 
         // Create and set renderer

@@ -64,7 +64,7 @@ class OverlayService : Service() {
         }
 
         try {
-            // Create overlay view
+            // Create GLSurfaceView with proper transparency configuration for shader rendering
             overlayView = GLOverlaySurfaceView(this)
 
             // Configure window layout parameters
@@ -76,7 +76,7 @@ class OverlayService : Service() {
                     WindowManager.LayoutParams.TYPE_PHONE
                 }
 
-                format = PixelFormat.RGBA_8888
+                format = PixelFormat.TRANSLUCENT
 
                 flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                        WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
@@ -114,8 +114,9 @@ class OverlayService : Service() {
 
         try {
             overlayView?.let { view ->
-                windowManager?.removeView(view)
+                // Cleanup GLSurfaceView
                 view.onDestroy()
+                windowManager?.removeView(view)
             }
             overlayView = null
             isOverlayActive = false
