@@ -94,6 +94,16 @@
                         android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
                         android:textColor="?android:attr/textColorSecondary" />
 
+                    <TextView
+                        android:id="@+id/current_shader_display"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="Current shader: red_test"
+                        android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                        android:textColor="?attr/colorPrimary"
+                        android:textStyle="italic" />
+
                 </LinearLayout>
 
                 <com.google.android.material.materialswitch.MaterialSwitch
@@ -109,17 +119,31 @@
     </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_open_shader"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="16dp"
+        android:enabled="false"
+        android:text="Open Shader"
+        app:icon="@drawable/ic_folder_open"
+        app:iconGravity="start"
+        style="@style/Widget.Material3.Button.TonalButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/card_overlay_control" />
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/button_settings"
         android:layout_width="0dp"
         android:layout_height="56dp"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="12dp"
         android:enabled="false"
         android:text="@string/settings"
         app:icon="@drawable/ic_settings"
         app:iconGravity="start"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/card_overlay_control" />
+        app:layout_constraintTop_toBottomOf="@id/button_open_shader" />
 
     <LinearLayout
         android:id="@+id/info_section"

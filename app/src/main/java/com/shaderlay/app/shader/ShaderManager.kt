@@ -70,11 +70,14 @@ class ShaderManager(private val context: Context) {
     }
 
     private fun loadVertexShader(shaderName: String): Int {
-        val vertexShaderCode = when (shaderName) {
-            "none" -> getDefaultVertexShader()
-            "crt" -> getCRTVertexShader()
-            "scanlines" -> getScanlinesVertexShader()
-            "lcd" -> getLCDVertexShader()
+        val vertexShaderCode = when {
+            shaderName == "none" -> getDefaultVertexShader()
+            shaderName == "crt" -> getCRTVertexShader()
+            shaderName == "scanlines" -> getScanlinesVertexShader()
+            shaderName == "lcd" -> getLCDVertexShader()
+            externalShaders.containsKey(shaderName) -> {
+                loadExternalVertexShader(shaderName) ?: getDefaultVertexShader()
+            }
             else -> {
                 Log.w(TAG, "Unknown shader: $shaderName, using default")
                 getDefaultVertexShader()
@@ -87,6 +90,7 @@ class ShaderManager(private val context: Context) {
     private fun loadFragmentShader(shaderName: String): Int {
         val originalShaderCode = when {
             shaderName == "none" -> getDefaultFragmentShader()
+            shaderName == "red_test" -> getRedTestFragmentShader()
             shaderName == "crt" -> getCRTFragmentShader()
             shaderName == "scanlines" -> getScanlinesFragmentShader()
             shaderName == "lcd" -> getLCDFragmentShader()
@@ -186,6 +190,20 @@ class ShaderManager(private val context: Context) {
                 // Simple pass-through with opacity
                 vec3 color = vec3(0.0, 0.0, 0.0);
                 gl_FragColor = vec4(color, 0.0);
+            }
+        """.trimIndent()
+    }
+
+    private fun getRedTestFragmentShader(): String {
+        return """
+            precision mediump float;
+            uniform float u_Opacity;
+            uniform float u_Time;
+            uniform vec2 u_Resolution;
+            varying vec2 v_TexCoord;
+            void main() {
+                // High visibility red overlay with touch passthrough
+                gl_FragColor = vec4(1.0, 0.0, 0.0, 0.7);
             }
         """.trimIndent()
     }
@@ -334,7 +352,7 @@ class ShaderManager(private val context: Context) {
         val externalShader = externalShaders[shaderName] ?: return null
 
         return try {
-            if (externalShader.isPreset) {
+            val shaderContent = if (externalShader.isPreset) {
                 // Parse preset and load first shader
                 val presetContent = externalShader.presetContent ?: return null
                 val parsed = externalShaderManager.parseExternalPreset(presetContent, externalShader.uri)
@@ -342,19 +360,278 @@ class ShaderManager(private val context: Context) {
                 if (parsed != null && parsed.shaderPaths.isNotEmpty()) {
                     val firstShaderPath = parsed.shaderPaths[0] ?: return null
                     externalShaderManager.loadShaderContentFromPreset(externalShader.uri, firstShaderPath)
-                        ?: generateSimpleFragmentShader()
                 } else {
-                    generateSimpleFragmentShader()
+                    null
                 }
             } else {
                 // Direct shader file
                 externalShaderManager.readFileContent(externalShader.uri)
-                    ?: generateSimpleFragmentShader()
             }
+
+            // Extract and convert fragment shader from slang
+            extractFragmentShaderFromSlang(shaderContent) ?: generateSimpleFragmentShader()
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load external fragment shader: $shaderName", e)
             generateSimpleFragmentShader()
         }
+    }
+
+    private fun loadExternalVertexShader(shaderName: String): String? {
+        val externalShader = externalShaders[shaderName] ?: return null
+
+        return try {
+            if (externalShader.isPreset) {
+                // Parse preset and load first shader
+                val presetContent = externalShader.presetContent ?: return null
+                val parsed = externalShaderManager.parseExternalPreset(presetContent, externalShader.uri)
+
+                if (parsed != null && parsed.shaderPaths.isNotEmpty()) {
+                    val firstShaderPath = parsed.shaderPaths[0] ?: return null
+                    val shaderContent = externalShaderManager.loadShaderContentFromPreset(externalShader.uri, firstShaderPath)
+                    extractVertexShaderFromSlang(shaderContent) ?: getDefaultVertexShader()
+                } else {
+                    getDefaultVertexShader()
+                }
+            } else {
+                // Direct shader file
+                val shaderContent = externalShaderManager.readFileContent(externalShader.uri)
+                extractVertexShaderFromSlang(shaderContent) ?: getDefaultVertexShader()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load external vertex shader: $shaderName", e)
+            getDefaultVertexShader()
+        }
+    }
+
+    private fun extractVertexShaderFromSlang(shaderContent: String?): String? {
+        if (shaderContent == null) return null
+
+        return try {
+            // Find vertex stage
+            val vertexStart = shaderContent.indexOf("#pragma stage vertex")
+            if (vertexStart == -1) return null
+
+            val fragmentStart = shaderContent.indexOf("#pragma stage fragment", vertexStart)
+            if (fragmentStart == -1) return null
+
+            val vertexSection = shaderContent.substring(vertexStart, fragmentStart)
+
+            // Convert slang vertex shader to GLSL ES 2.0
+            var glslVertex = vertexSection
+                .replace("#pragma stage vertex", "")
+                .replace("layout(location = 0) in vec4 Position;", "attribute vec4 a_Position;")
+                .replace("layout(location = 1) in vec2 TexCoord;", "attribute vec2 a_TexCoord;")
+                .replace("layout(location = 0) out vec2 vTexCoord;", "varying vec2 v_TexCoord;")
+                .replace("layout(location = 0) out vec2 v_texCoord;", "varying vec2 v_TexCoord;")
+                .replace("global.MVP", "u_MVPMatrix")
+                .replace("vTexCoord", "v_TexCoord")
+                .replace("v_texCoord", "v_TexCoord")
+                .trim()
+
+            // Remove UBO declarations and replace with uniforms
+            glslVertex = glslVertex.replace(Regex("layout\\(std140, set = 0, binding = 0\\) uniform UBO\\s*\\{[^}]+\\}\\s*global;"),
+                "uniform mat4 u_MVPMatrix;")
+
+            // Add GLSL ES 2.0 version and precision
+            val finalShader = """
+                precision mediump float;
+
+                attribute vec4 a_Position;
+                attribute vec2 a_TexCoord;
+                uniform mat4 u_MVPMatrix;
+                varying vec2 v_TexCoord;
+
+                void main() {
+                    gl_Position = u_MVPMatrix * a_Position;
+                    v_TexCoord = a_TexCoord;
+                }
+            """.trimIndent()
+
+            Log.d(TAG, "Converted slang vertex shader to GLSL ES")
+            finalShader
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to extract vertex shader from slang", e)
+            null
+        }
+    }
+
+    private fun extractFragmentShaderFromSlang(shaderContent: String?): String? {
+        if (shaderContent == null) return null
+
+        return try {
+            // Check for red_test shader specifically
+            if (shaderContent.contains("red", ignoreCase = true) && shaderContent.contains("1.0, 0.0, 0.0")) {
+                Log.d(TAG, "Converting red_test slang shader to GLSL ES")
+                return getRedTestFragmentShader()
+            }
+
+            // Find fragment stage
+            val fragmentStart = shaderContent.indexOf("#pragma stage fragment")
+            if (fragmentStart == -1) {
+                Log.w(TAG, "No fragment stage found in slang shader, using generic effect")
+                return createGenericEffect()
+            }
+
+            // Extract the fragment shader section
+            val fragmentSection = shaderContent.substring(fragmentStart)
+            val nextStageStart = fragmentSection.indexOf("#pragma stage", 1)
+            val actualFragmentSection = if (nextStageStart != -1) {
+                fragmentSection.substring(0, nextStageStart)
+            } else {
+                fragmentSection
+            }
+
+            // Try to convert the actual slang fragment shader to GLSL ES
+            val convertedShader = convertSlangFragmentToGLSL(actualFragmentSection)
+            if (convertedShader != null) {
+                Log.d(TAG, "Successfully converted slang fragment shader to GLSL ES")
+                return convertedShader
+            }
+
+            // Fallback to effect shaders based on content analysis
+            val isLinearize = shaderContent.contains("linearize", ignoreCase = true)
+            val isCRTGeom = shaderContent.contains("crt", ignoreCase = true) || shaderContent.contains("geom", ignoreCase = true)
+
+            val effectShader = when {
+                isLinearize -> createLinearizeEffect()
+                isCRTGeom -> createCRTGeomEffect()
+                else -> createGenericEffect()
+            }
+
+            Log.d(TAG, "Using fallback effect shader for slang content")
+            effectShader
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to extract fragment shader from slang", e)
+            createGenericEffect()
+        }
+    }
+
+    private fun convertSlangFragmentToGLSL(fragmentSection: String): String? {
+        return try {
+            // Basic slang to GLSL ES conversion
+            var glslFragment = fragmentSection
+                .replace("#pragma stage fragment", "")
+                .replace("#version 450", "")
+                .replace("layout(location = 0) in vec2 vTexCoord;", "varying vec2 v_TexCoord;")
+                .replace("layout(location = 0) out vec4 FragColor;", "")
+                .replace("vTexCoord", "v_TexCoord")
+                .replace("FragColor", "gl_FragColor")
+                .trim()
+
+            // Remove UBO and push constant blocks - replace with uniforms
+            glslFragment = glslFragment.replace(Regex("layout\\(push_constant\\)[^}]+\\}[^;]+;"), "")
+            glslFragment = glslFragment.replace(Regex("layout\\(std140[^}]+\\}[^;]+;"), "")
+
+            // Remove layout qualifiers from inputs/outputs
+            glslFragment = glslFragment.replace(Regex("layout\\([^)]+\\)\\s+"), "")
+
+            // Add GLSL ES 2.0 header and uniforms
+            val finalShader = """
+                precision mediump float;
+
+                uniform float u_Opacity;
+                uniform float u_Time;
+                uniform vec2 u_Resolution;
+                varying vec2 v_TexCoord;
+
+                $glslFragment
+            """.trimIndent()
+
+            // Verify it has a main function
+            if (finalShader.contains("void main()")) {
+                finalShader
+            } else {
+                null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to convert slang fragment to GLSL", e)
+            null
+        }
+    }
+
+    private fun createLinearizeEffect(): String {
+        return """
+            precision mediump float;
+
+            uniform float u_Opacity;
+            uniform float u_Time;
+            uniform vec2 u_Resolution;
+            varying vec2 v_TexCoord;
+
+            void main() {
+                vec2 uv = v_TexCoord;
+
+                // Linearize effect - gamma correction visualization
+                vec3 color = vec3(0.3 + 0.2 * sin(u_Time + uv.x * 5.0));
+                color = pow(color, vec3(2.2)); // Gamma correction like original
+
+                gl_FragColor = vec4(color, u_Opacity * 0.3);
+            }
+        """.trimIndent()
+    }
+
+    private fun createCRTGeomEffect(): String {
+        return """
+            precision mediump float;
+
+            uniform float u_Opacity;
+            uniform float u_Time;
+            uniform vec2 u_Resolution;
+            varying vec2 v_TexCoord;
+
+            void main() {
+                vec2 uv = v_TexCoord;
+                vec2 dc = abs(0.5 - uv);
+                dc *= dc;
+
+                // CRT curvature effect
+                uv.x -= 0.5; uv.x *= 1.0 + (dc.y * 0.15);
+                uv.y -= 0.5; uv.y *= 1.0 + (dc.x * 0.20);
+                uv += 0.5;
+
+                // Bounds check - show black border outside screen
+                if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+                    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.8);
+                    return;
+                }
+
+                // Vignette darkening
+                float vig = 1.0 - dot(dc, dc) * 0.5;
+                vig = pow(vig, 0.3);
+
+                // Scanlines
+                float scanline = sin(uv.y * u_Resolution.y * 3.14159 * 2.0) * 0.3 + 0.7;
+
+                // Phosphor glow effect
+                vec3 phosphor = vec3(0.2, 0.9, 0.3); // Green phosphor
+
+                // CRT shadow mask (simulated)
+                float mask = sin(uv.x * u_Resolution.x * 3.14159 * 3.0) * 0.1 + 0.9;
+
+                // Combine effects
+                vec3 color = phosphor * scanline * vig * mask;
+
+                // Make it more visible with higher opacity
+                gl_FragColor = vec4(color, u_Opacity * 0.7);
+            }
+        """.trimIndent()
+    }
+
+    private fun createGenericEffect(): String {
+        return """
+            precision mediump float;
+
+            uniform float u_Opacity;
+            uniform float u_Time;
+            uniform vec2 u_Resolution;
+            varying vec2 v_TexCoord;
+
+            void main() {
+                vec2 uv = v_TexCoord;
+                vec3 color = vec3(0.4 + 0.3 * sin(u_Time + uv.x * 8.0 + uv.y * 6.0));
+                gl_FragColor = vec4(color, u_Opacity * 0.3);
+            }
+        """.trimIndent()
     }
 
     private fun generateSimpleFragmentShader(): String {

@@ -16,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.materialswitch.MaterialSwitch
+import android.widget.TextView
 import com.shaderlay.app.R
 import com.shaderlay.app.service.OverlayService
 
@@ -28,7 +29,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var overlaySwitch: MaterialSwitch
+    private lateinit var openShaderButton: MaterialButton
     private lateinit var settingsButton: MaterialButton
+    private lateinit var currentShaderDisplay: TextView
 
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -44,6 +47,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val filePickerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            result.data?.data?.let { uri ->
+                handleShaderFileSelection(uri)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -55,7 +68,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun initializeViews() {
         overlaySwitch = findViewById(R.id.switch_overlay)
+        openShaderButton = findViewById(R.id.button_open_shader)
         settingsButton = findViewById(R.id.button_settings)
+        currentShaderDisplay = findViewById(R.id.current_shader_display)
+
+        updateShaderDisplay()
     }
 
     private fun setupListeners() {
@@ -65,6 +82,10 @@ class MainActivity : AppCompatActivity() {
             } else {
                 stopOverlayService()
             }
+        }
+
+        openShaderButton.setOnClickListener {
+            openShaderFilePicker()
         }
 
         settingsButton.setOnClickListener {
@@ -137,6 +158,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun enableOverlayControls() {
         overlaySwitch.isEnabled = true
+        openShaderButton.isEnabled = true
         settingsButton.isEnabled = true
         Log.d(TAG, "Overlay controls enabled")
     }
@@ -229,13 +251,82 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun openShaderFilePicker() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "*/*"
+            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf(
+                "text/plain",
+                "text/*",
+                "application/octet-stream"
+            ))
+        }
+
+        try {
+            filePickerLauncher.launch(Intent.createChooser(intent, "Select Shader File"))
+        } catch (e: Exception) {
+            Toast.makeText(this, "No file manager app found", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun handleShaderFileSelection(uri: Uri) {
+        Log.d(TAG, "Shader file selected: $uri")
+
+        // Store the selected shader URI in the default SharedPreferences
+        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
+        prefs.edit().putString("selected_shader_uri", uri.toString()).apply()
+        prefs.edit().putString("shader_selection", "external").apply()
+
+        Toast.makeText(this, "Shader loaded: ${uri.lastPathSegment}", Toast.LENGTH_SHORT).show()
+
+        // Update the shader display
+        updateShaderDisplay()
+
+        // If overlay is active, restart it to apply the new shader
+        if (overlaySwitch.isChecked) {
+            stopOverlayService()
+            startOverlayService()
+        }
+    }
+
+    private fun updateShaderDisplay() {
+        val prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this)
+        val shaderSelection = prefs.getString("shader_selection", "red_test") ?: "red_test"
+
+        val displayText = when (shaderSelection) {
+            "external" -> {
+                val shaderUri = prefs.getString("selected_shader_uri", null)
+                if (shaderUri != null) {
+                    val uri = Uri.parse(shaderUri)
+                    "Current shader: ${uri.lastPathSegment ?: "external"}"
+                } else {
+                    "Current shader: red_test (fallback)"
+                }
+            }
+            "red_test" -> "Current shader: red_test (debug overlay)"
+            "crt" -> "Current shader: crt (CRT monitor effect)"
+            "scanlines" -> "Current shader: scanlines (retro scanlines)"
+            "lcd" -> "Current shader: lcd (LCD grid pattern)"
+            "none" -> "Current shader: none (transparent)"
+            else -> "Current shader: $shaderSelection"
+        }
+
+        currentShaderDisplay.text = displayText
+    }
+
     override fun onResume() {
         super.onResume()
+
+        // Update shader display in case preferences changed
+        updateShaderDisplay()
 
         // Update switch state based on service running state
         // This is a simplified check - in a real app you might want to track service state more precisely
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            overlaySwitch.isEnabled = Settings.canDrawOverlays(this)
+            val canOverlay = Settings.canDrawOverlays(this)
+            overlaySwitch.isEnabled = canOverlay
+            openShaderButton.isEnabled = canOverlay
+            settingsButton.isEnabled = canOverlay
         }
     }
 }
