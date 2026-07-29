@@ -98,7 +98,6 @@ class SettingsActivity : AppCompatActivity() {
                 )
                 entryValues = arrayOf("high", "balanced", "battery")
                 setDefaultValue("balanced")
-                summary = "%s"
             }
 
             // FPS limit
@@ -106,7 +105,6 @@ class SettingsActivity : AppCompatActivity() {
                 entries = arrayOf("30 FPS", "60 FPS", "120 FPS", "Unlimited")
                 entryValues = arrayOf("30", "60", "120", "-1")
                 setDefaultValue("60")
-                summary = "%s"
             }
 
             // Opacity
