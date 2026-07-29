@@ -62,7 +62,7 @@ class ShaderRenderer(private val context: Context) : GLSurfaceView.Renderer {
     private val viewMatrix = FloatArray(16)
 
     private var currentOpacity = 1.0f
-    private var currentShader = "none"
+    private var currentShader = "red_test"
     private var performanceMode = PerformanceMode.BALANCED
     private var startTime = 0L
     private var frameCount = 0
@@ -71,7 +71,7 @@ class ShaderRenderer(private val context: Context) : GLSurfaceView.Renderer {
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         Log.d(TAG, "onSurfaceCreated")
 
-        // Enable blending for transparency
+        // Enable blending for shader transparency
         GLES20.glEnable(GLES20.GL_BLEND)
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
 
@@ -84,8 +84,9 @@ class ShaderRenderer(private val context: Context) : GLSurfaceView.Renderer {
         // Initialize shader manager
         shaderManager = ShaderManager(context)
 
-        // Load default shader
-        loadShader(currentShader)
+        // Always use red_test shader for simple overlay
+        Log.d(TAG, "Loading red_test shader for overlay")
+        loadShader("red_test")
 
         startTime = System.currentTimeMillis()
         lastFpsTime = startTime
